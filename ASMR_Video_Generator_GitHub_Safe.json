@@ -1,0 +1,574 @@
+{
+  "name": "ASMR Video Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        80
+      ],
+      "id": "d3c09048-a642-41ba-a643-ab8ba1f5991e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"prompt\":\"<insert generated prompt here>\",\n\"videofile\":\"<insert generated video title here>\",\n\"videoDescription\":\"<insert generated video description here>\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        304
+      ],
+      "id": "46fbdc5c-eca8-4f11-9860-fb482c3f1536",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "generate ASMR.",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an expert prompt engineer specializing in hyper-realistic ASMR video generation prompts.\nYour task is to generate a complete, detailed video generation prompt based on the following strict template.\nRules you must follow every time:\n\nReplace the fruit with a completely different, realistic whole fruit each time (never repeat the same fruit across generations).\nKeep the fruit made of transparent jelly glass with a soft light-colored outer hue that matches the natural color of the chosen fruit.\nThe video must remain a real vertical smartphone video recorded in true portrait mode (9:16). The camera must be physically vertical. Do NOT simulate 9:16 by rotating horizontal footage.\nOnly the hand, knife, and fruit are visible.\nASMR slicing sounds only — no talking, no music.\nUltra-sharp macro lens, shallow depth of field, cinematic lighting, 4K, 30 FPS.\nStructure the output exactly like this:\n\nVideo Title:\n\n[Create a short, catchy, SEO-friendly title]\nCaption:\n\n[Write an engaging social-media style caption with relevant hashtags]\nVideo Prompt:\n\nThis is a real vertical smartphone video recorded in portrait mode (9:16). The camera must be physically vertical. Do NOT simulate 9:16 by rotating horizontal footage. A hyper-realistic cinematic close-up of a whole, full-shaped [FRUIT NAME] made of transparent jelly glass with a soft light-colored outer hue — for example, pale yellow for a banana, light red for an apple, gentle orange for a carrot. The glass item is perfectly centered on a wooden cutting board, glowing subtly under studio lighting. A human hand is clearly visible, holding a sharp stainless steel knife just above the fruit, ready to slice. In slow motion, the knife makes the first clean slice through the glass fruit — the front section breaks off cleanly with delicate jelly-crack sounds. Then, the knife immediately makes a second slice, cutting another piece smoothly. Transparent shards scatter lightly from both cuts. ASMR slicing sounds only — no talking, no music. Only the hand, knife, and fruit are visible. Ultra-sharp macro lens, shallow depth of field, cinematic lighting, 4K, 30 FPS.\nGenerate one new variation now. Choose a different fruit from previous ones.\n\nMake your output in JSON format:\n\n{\n\"prompt\":\"<insert generated prompt here>\",\n\"videofile\":\"<insert generated video title here>\",\n\"videoDescription\":\"<insert generated video description here>\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        80
+      ],
+      "id": "d82cbcd3-d44b-4241-b610-4d53737adabf",
+      "name": "Generate Prompt"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_CLOUD_PROJECT_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_VERTEX_AI_PROJECT"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [
+        240,
+        304
+      ],
+      "id": "da1a6ae8-082f-4de8-9da1-6f60df04283a",
+      "name": "Google Vertex Chat Model"
+    },
+    {
+      "parameters": {
+        "jsCode": "// PUBLIC DEMO ONLY: Configure Google Cloud service-account authentication securely in n8n.\n// Do not embed private keys or service-account JSON in workflow code.\nthrow new Error(\"Configure secure service-account authentication before running this workflow.\");"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "2b092511-54f2-4c15-abb8-da3f2e575b4f",
+      "name": "Secret Payload"
+    },
+    {
+      "parameters": {
+        "useJson": true,
+        "claimsJson": "={\n\"iss\": \"{{ $json.client_email }}\",\n\"sub\": \"{{ $json.client_email }}\",\n\"scope\":\"https://www.googleapis.com/auth/cloud-platform\",\n\"aud\":\"https://oauth2.googleapis.com/token\",\n\"iat\": {{ Math.floor($now.toSeconds()) }},\n\"exp\": {{ Math.floor($now.plus({ seconds: 3600 }).toSeconds()) }}\n}",
+        "headerClaims": "={\n  \"alg\": \"RS256\",\n  \"typ\": \"JWT\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        800,
+        0
+      ],
+      "id": "4784f36a-d750-49b7-8ac2-c35a8d0920e7",
+      "name": "JWT"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://oauth2.googleapis.com/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "urn:ietf:params:oauth:grant-type:jwt-bearer"
+            },
+            {
+              "name": "assertion",
+              "value": "={{ $json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "4b508fe4-f11e-417e-8769-bb11f10c872f",
+      "name": "Exchange JWT for Access token"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://us-central1-aiplatform.googleapis.com/v1/projects/YOUR_GOOGLE_CLOUD_PROJECT_ID/locations/us-central1/publishers/google/models/veo-3.1-generate-001:predictLongRunning",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"instances\": [\n{\n\"prompt\": \"{{ $('Generate Prompt').item.json.output.prompt }}\"\n}\n],\n\"parameters\": {\n\"durationSeconds\": 8,\n\"generateAudio\": true,\n\"aspectRatio\":\"9:16\",\n\"negativePrompt\": \"UI, overlays, captions, on-screen buttons, phone interface, subtitles, mentions\"\n}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "904d6413-803c-4fe2-a815-73cb0d347ef6",
+      "name": "Generate Video"
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        -64
+      ],
+      "id": "cc20271e-bac0-4d78-9708-ff80b82b9102",
+      "name": "Wait"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://us-central1-aiplatform.googleapis.com/v1/projects/YOUR_GOOGLE_CLOUD_PROJECT_ID/locations/us-central1/publishers/google/models/veo-3.1-generate-001:fetchPredictOperation",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Exchange JWT for Access token').item.json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "operationName",
+              "value": "={{ $('Generate Video').item.json.name }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1696,
+        -144
+      ],
+      "id": "30f22f94-4a9e-40f0-8eb8-0e7614601394",
+      "name": "Get Generated Video"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c74c15cd-6e8a-42ac-bd61-288b0edc4e48",
+              "leftValue": "={{ $json.body.done }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1920,
+        -64
+      ],
+      "id": "76486811-82b9-4a86-8c86-afae1bd4aa24",
+      "name": "is done?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6c99194d-08d3-42f7-8219-bc5b190e64f9",
+              "leftValue": "={{ $json.body.response.raiMediaFilteredReasons }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2144,
+        -64
+      ],
+      "id": "f92ee46d-1dae-4aa1-85bf-fdae2de2b0f9",
+      "name": "is compliant?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d639f32c-d976-4e41-a27f-ac75f11f8831",
+              "leftValue": "={{ $json.body.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2368,
+        0
+      ],
+      "id": "8f776db7-34d4-44bd-a696-8381df94f082",
+      "name": "has errors?"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "body.response.videos[0].bytesBase64Encoded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2592,
+        0
+      ],
+      "id": "acbb6709-c0b8-4498-9371-6e1cd1472f82",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('Generate Prompt').item.json.output.videofile }}",
+        "regionCode": "PH",
+        "categoryId": "24",
+        "options": {
+          "description": "={{ $('Generate Prompt').item.json.output.videoDescription }}",
+          "privacyStatus": "public"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -160
+      ],
+      "id": "735ac68a-dc7c-4aef-807d-eaac7bbad08c",
+      "name": "Upload a video"
+    },
+    {
+      "parameters": {
+        "hostUrl": "graph-video.facebook.com",
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v25.0",
+        "node": "me",
+        "edge": "videos",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "description",
+                "value": "={{ $('Generate Prompt').item.json.output.videoDescription }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        0
+      ],
+      "id": "6b6487b2-c8c5-4e0f-924f-1e87eda7e0e8",
+      "name": "Facebook Graph API"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Prompt": {
+      "main": [
+        [
+          {
+            "node": "Secret Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Secret Payload": {
+      "main": [
+        [
+          {
+            "node": "JWT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JWT": {
+      "main": [
+        [
+          {
+            "node": "Exchange JWT for Access token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exchange JWT for Access token": {
+      "main": [
+        [
+          {
+            "node": "Generate Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Video": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get Generated Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Generated Video": {
+      "main": [
+        [
+          {
+            "node": "is done?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is done?": {
+      "main": [
+        [
+          {
+            "node": "is compliant?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is compliant?": {
+      "main": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "has errors?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "has errors?": {
+      "main": [
+        [
+          {
+            "node": "Generate Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "tags": []
+}
