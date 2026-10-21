@@ -1,0 +1,1410 @@
+{
+  "name": "ASMR Video Generator v2.0 (Public Template)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1248,
+        240
+      ],
+      "id": "19289ed6-45b3-41a3-93f8-9b47ae1fba6d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"prompt\":\"<insert generated prompt here>\",\n\"videofile\":\"<insert generated video title here>\",\n\"videoDescription\":\"<insert generated video description here>\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -664,
+        472
+      ],
+      "id": "1d5839dd-af53-4aeb-98e3-8acc2f30031c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{\n`Generate a new hyper-realistic ASMR glass fruit slicing video.\n\nPreviously uploaded videos:\n${$('Get row(s) in sheet').all()\n  .map(item => item.json[\"Video Title\"])\n  .filter(Boolean)\n  .join('\\n')}\n\nPreviously rejected titles:\n${($json.rejectedTitles ?? []).join('\\n')}\n\nIMPORTANT:\n- Identify the fruits in all previous and rejected titles.\n- Never reuse those fruits.\n- Choose a completely different fruit.\n- Keep the video in vertical 9:16 format.\n- Follow the system instructions.\n- Return prompt, videofile, and videoDescription.`\n}}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an expert prompt engineer specializing in hyper-realistic ASMR video generation prompts.\nYour task is to generate a complete, detailed video generation prompt based on the following strict template.\nRules you must follow every time:\n\nReplace the fruit with a completely different, realistic whole fruit each time (never repeat the same fruit across generations).\nKeep the fruit made of transparent jelly glass with a soft light-colored outer hue that matches the natural color of the chosen fruit.\nThe video must remain a real vertical smartphone video recorded in true portrait mode (9:16). The camera must be physically vertical. Do NOT simulate 9:16 by rotating horizontal footage.\nOnly the hand, knife, and fruit are visible.\nASMR slicing sounds only — no talking, no music.\nUltra-sharp macro lens, shallow depth of field, cinematic lighting, 4K, 30 FPS.\nStructure the output exactly like this:\n\nVideo Title:\n\n[Create a short, catchy, SEO-friendly title]\nCaption:\n\n[Write an engaging social-media style caption with relevant hashtags]\nVideo Prompt:\n\nThis is a real vertical smartphone video recorded in portrait mode (9:16). The camera must be physically vertical. Do NOT simulate 9:16 by rotating horizontal footage. A hyper-realistic cinematic close-up of a whole, full-shaped [FRUIT NAME] made of transparent jelly glass with a soft light-colored outer hue — for example, pale yellow for a banana, light red for an apple, gentle orange for a carrot. The glass item is perfectly centered on a wooden cutting board, glowing subtly under studio lighting. A human hand is clearly visible, holding a sharp stainless steel knife just above the fruit, ready to slice. In slow motion, the knife makes the first clean slice through the glass fruit — the front section breaks off cleanly with delicate jelly-crack sounds. Then, the knife immediately makes a second slice, cutting another piece smoothly. Transparent shards scatter lightly from both cuts. ASMR slicing sounds only — no talking, no music. Only the hand, knife, and fruit are visible. Ultra-sharp macro lens, shallow depth of field, cinematic lighting, 4K, 30 FPS.\nGenerate one new variation now. Choose a different fruit from previous ones.\n\nMake your output in JSON format:\n\n{\n\"prompt\":\"<insert generated prompt here>\",\n\"videofile\":\"<insert generated video title here>\",\n\"videoDescription\":\"<insert generated video description here>\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -800,
+        240
+      ],
+      "id": "5215067e-a1ff-4dab-b852-5e2f94e7751e",
+      "name": "Generate Prompt",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_CLOUD_PROJECT_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
+      "typeVersion": 1,
+      "position": [
+        -792,
+        472
+      ],
+      "id": "1caa859b-72b5-4040-9750-1257f56191df",
+      "name": "Google Vertex Chat Model"
+    },
+    {
+      "parameters": {
+        "jsCode": "// TEMPLATE ONLY: Configure a Google Cloud service account securely before running.\n// Do not commit private keys or access tokens to GitHub.\nthrow new Error(\"Configure service account credentials securely before running this template.\");"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        48
+      ],
+      "id": "d0cd2543-56ca-4998-9a42-a329f0106e82",
+      "name": "Secret Payload"
+    },
+    {
+      "parameters": {
+        "useJson": true,
+        "claimsJson": "={\n\"iss\": \"{{ $json.client_email }}\",\n\"sub\": \"{{ $json.client_email }}\",\n\"scope\":\"https://www.googleapis.com/auth/cloud-platform\",\n\"aud\":\"https://oauth2.googleapis.com/token\",\n\"iat\": {{ Math.floor($now.toSeconds()) }},\n\"exp\": {{ Math.floor($now.plus({ seconds: 3600 }).toSeconds()) }}\n}",
+        "headerClaims": "={\n  \"alg\": \"RS256\",\n  \"typ\": \"JWT\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        448,
+        48
+      ],
+      "id": "d3218455-ac33-41d2-a2f7-fe4df35baffc",
+      "name": "JWT"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://oauth2.googleapis.com/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "urn:ietf:params:oauth:grant-type:jwt-bearer"
+            },
+            {
+              "name": "assertion",
+              "value": "={{ $json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        176
+      ],
+      "id": "5b44dc3c-db45-45fe-979d-cfa3e02e9870",
+      "name": "Exchange JWT for Access token"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://us-central1-aiplatform.googleapis.com/v1/projects/YOUR_GOOGLE_CLOUD_PROJECT_ID/locations/us-central1/publishers/google/models/veo-3.1-generate-001:predictLongRunning",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"instances\": [\n{\n\"prompt\": \"{{ $('Generate Prompt').item.json.output.prompt }}\"\n}\n],\n\"parameters\": {\n\"durationSeconds\": 8,\n\"generateAudio\": true,\n\"aspectRatio\":\"9:16\",\n\"negativePrompt\": \"UI, overlays, captions, on-screen buttons, phone interface, subtitles, mentions\"\n}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        176
+      ],
+      "id": "23b13b90-d7dd-490c-8a1e-31c71501df6d",
+      "name": "Generate Video"
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        96
+      ],
+      "id": "17b3bd10-50cc-4050-8634-a7375b18aaa6",
+      "name": "Wait"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://us-central1-aiplatform.googleapis.com/v1/projects/YOUR_GOOGLE_CLOUD_PROJECT_ID/locations/us-central1/publishers/google/models/veo-3.1-generate-001:fetchPredictOperation",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Exchange JWT for Access token').item.json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "operationName",
+              "value": "={{ $('Generate Video').item.json.name }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1344,
+        32
+      ],
+      "id": "ad4a026d-4c52-4b52-9a64-6b2d7112675d",
+      "name": "Get Generated Video"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c74c15cd-6e8a-42ac-bd61-288b0edc4e48",
+              "leftValue": "={{ $json.body.done }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        96
+      ],
+      "id": "6cdf098e-fba2-4444-88f6-50cb5ca1c49f",
+      "name": "is done?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6c99194d-08d3-42f7-8219-bc5b190e64f9",
+              "leftValue": "={{ $json.body.response.raiMediaFilteredReasons }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        96
+      ],
+      "id": "64cb6b6a-4347-4bff-94b8-26e29ac31c43",
+      "name": "is compliant?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d639f32c-d976-4e41-a27f-ac75f11f8831",
+              "leftValue": "={{ $json.body.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        176
+      ],
+      "id": "f3c4c5be-8371-43de-b427-6f2ba693872a",
+      "name": "has errors?"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "videoBase64",
+        "options": {
+          "fileName": "file.mp4",
+          "mimeType": "video/mp4"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2688,
+        176
+      ],
+      "id": "e913fdae-373c-40c3-8639-8dfd976a7fa7",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('Generate Prompt').item.json.output.videofile }}",
+        "regionCode": "PH",
+        "categoryId": "=24",
+        "options": {
+          "description": "={{ $('Generate Prompt').item.json.output.videoDescription }}",
+          "privacyStatus": "public"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        2912,
+        32
+      ],
+      "id": "869da827-55b7-4a79-95e3-56621d990e13",
+      "name": "Upload a video",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "hostUrl": "graph-video.facebook.com",
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v25.0",
+        "node": "me",
+        "edge": "videos",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "description",
+                "value": "={{ $('Generate Prompt').item.json.output.videoDescription }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        2912,
+        416
+      ],
+      "id": "57aaf989-0909-412c-b68a-2f75c904da02",
+      "name": "Facebook Graph API",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_NAME",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Video Title": "={{ $('Generate Prompt').first().json.output.videofile }}",
+            "Date & Time": "={{ $now.setZone('Asia/Manila').toFormat('yyyy-MM-dd HH:mm:ss') }}",
+            "ID": "={{ $execution.id }}",
+            "Facebook Status": "Pending",
+            "YouTube Status": "Pending"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Video Title",
+              "displayName": "Video Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date & Time",
+              "displayName": "Date & Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook Status",
+              "displayName": "Facebook Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "YouTube Status",
+              "displayName": "YouTube Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2240,
+        176
+      ],
+      "id": "ae8e0541-70c3-4d61-a77b-2eea9e0dbe8d",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_NAME",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $execution.id }}",
+            "YouTube Status": "Success"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "Video Title",
+              "displayName": "Video Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Date & Time",
+              "displayName": "Date & Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook Status",
+              "displayName": "Facebook Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "YouTube Status",
+              "displayName": "YouTube Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3136,
+        -64
+      ],
+      "id": "fb0e706e-eb4c-4352-97ef-582dee1bdce2",
+      "name": "YouTube - Update Success"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_NAME",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $execution.id }}",
+            "YouTube Status": "Failed"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "Video Title",
+              "displayName": "Video Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Date & Time",
+              "displayName": "Date & Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook Status",
+              "displayName": "Facebook Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "YouTube Status",
+              "displayName": "YouTube Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3136,
+        128
+      ],
+      "id": "59dd4e92-aba1-4ac5-bce2-af000fc1f107",
+      "name": "YouTube - Update Failed"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_NAME",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $execution.id }}",
+            "Facebook Status": "Success"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "Video Title",
+              "displayName": "Video Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Date & Time",
+              "displayName": "Date & Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook Status",
+              "displayName": "Facebook Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "YouTube Status",
+              "displayName": "YouTube Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3136,
+        320
+      ],
+      "id": "6ea65ace-429a-429d-b611-f7b0826c6f7c",
+      "name": "Facebook - Update Success"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_NAME",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $execution.id }}",
+            "Facebook Status": "Failed"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "Video Title",
+              "displayName": "Video Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Date & Time",
+              "displayName": "Date & Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook Status",
+              "displayName": "Facebook Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "YouTube Status",
+              "displayName": "YouTube Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3136,
+        512
+      ],
+      "id": "eb6319eb-e056-45c3-8ba4-79d1bd3e0676",
+      "name": "Facebook - Update Failed"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96e30359-c110-46e0-9fe5-8706ac36f5ef",
+              "name": "videoBase64",
+              "value": "={{ $('Get Generated Video').first().json.body.response.videos[0].bytesBase64Encoded }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2464,
+        176
+      ],
+      "id": "727a08c2-047a-4eb8-9cea-0ba53df04aa6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_NAME",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1024,
+        240
+      ],
+      "id": "a83e50da-a721-4cca-8b8b-76203aacda53",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst newTitle = input.output.videofile;\n\nconst rows = $('Get row(s) in sheet').all();\n\nconst existingTitles = rows\n  .map(item => item.json[\"Video Title\"])\n  .filter(title => typeof title === \"string\" && title.trim());\n\nconst retryCount = Number(input.retryCount ?? 0);\n\nconst rejectedTitles = Array.isArray(input.rejectedTitles)\n  ? input.rejectedTitles\n  : [];\n\nconst stopWords = new Set([\n  \"asmr\", \"jelly\", \"glass\", \"slicing\",\n  \"slice\", \"slices\", \"sound\", \"sounds\",\n  \"satisfying\", \"video\", \"the\", \"a\"\n]);\n\nfunction getKeywords(title) {\n  return title.toLowerCase()\n    .replace(/[^a-z0-9\\s]/g, \"\")\n    .split(/\\s+/)\n    .filter(word => word && !stopWords.has(word));\n}\n\nconst newKeywords = getKeywords(newTitle);\n\nconst isDuplicate = [...existingTitles, ...rejectedTitles]\n  .some(title => {\n    const oldKeywords = getKeywords(title);\n\n    return newKeywords.length > 0 &&\n      oldKeywords.length > 0 &&\n      newKeywords.some(word => oldKeywords.includes(word));\n  });\n\nreturn [{\n  json: {\n    newTitle,\n    existingTitles,\n    isDuplicate,\n    retryCount,\n    rejectedTitles: isDuplicate\n      ? [...rejectedTitles, newTitle]\n      : rejectedTitles\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        -48
+      ],
+      "id": "d20e49da-40f3-45a7-b404-93dd617b3316",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ad01879e-1b5a-42c2-99e4-120cef25d168",
+              "leftValue": "={{ $json.isDuplicate }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        -48
+      ],
+      "id": "df5e5c59-c418-458b-832f-6bb28a78ecd5",
+      "name": "If - is duplicate?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dcae186b-ef96-4ee2-a14b-a4b4e815c2df",
+              "name": "retryCount",
+              "value": "={{ ($json.retryCount ?? 0) + 1 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        -144
+      ],
+      "id": "4c697856-fb26-430c-bdb2-f02ac46b9e25",
+      "name": "Retry Counter"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "48f2c6ce-8364-4462-bf2a-5123a993ba55",
+              "leftValue": "={{ $json.retryCount }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        -16
+      ],
+      "id": "439e1890-72f7-4acc-aa7f-c8baf53035e6",
+      "name": "Retry Limit"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst state = $getWorkflowStaticData('node');\n\nstate.retryCount = $input.first().json.retryCount;\nstate.rejectedTitles = $input.first().json.rejectedTitles ?? [];\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -144
+      ],
+      "id": "7ebf2491-0a7d-49e2-902c-debe303c4a93",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "69ac2b2a-8d2a-43ef-a794-99a07ebbb414",
+              "name": "retryCount",
+              "value": "={{ $('Retry Limit').isExecuted ? $('Retry Limit').last().json.retryCount : 0 }}",
+              "type": "string"
+            },
+            {
+              "id": "0f05134d-9be8-4242-9d45-c2b0cf7024f8",
+              "name": "rejectedTitles",
+              "value": "={{ $('Retry Limit').isExecuted ? $('Retry Limit').last().json.rejectedTitles : [] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -448,
+        -48
+      ],
+      "id": "af02c6de-983e-4e8f-a738-8dd3cc4fc0c2",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Prompt": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vertex Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Secret Payload": {
+      "main": [
+        [
+          {
+            "node": "JWT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JWT": {
+      "main": [
+        [
+          {
+            "node": "Exchange JWT for Access token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exchange JWT for Access token": {
+      "main": [
+        [
+          {
+            "node": "Generate Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Video": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get Generated Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Generated Video": {
+      "main": [
+        [
+          {
+            "node": "is done?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is done?": {
+      "main": [
+        [
+          {
+            "node": "is compliant?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is compliant?": {
+      "main": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "has errors?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "has errors?": {
+      "main": [
+        [
+          {
+            "node": "Generate Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a video": {
+      "main": [
+        [
+          {
+            "node": "YouTube - Update Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "YouTube - Update Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Graph API": {
+      "main": [
+        [
+          {
+            "node": "Facebook - Update Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Facebook - Update Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If - is duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - is duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Retry Counter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Secret Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry Counter": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry Limit": {
+      "main": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Retry Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}
