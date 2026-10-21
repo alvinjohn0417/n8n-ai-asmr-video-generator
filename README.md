@@ -1,77 +1,59 @@
-# 🎬 AI ASMR Video Generator
+[README.md](https://github.com/user-attachments/files/33750046/README.md)
+# AI ASMR Video Generator v2.0
 
-### End-to-End AI Video Generation & Social Media Publishing Automation
+An n8n automation project that creates short AI-generated ASMR fruit-slicing videos and publishes them to YouTube and Facebook, with duplicate-title checks and Google Sheets tracking.
 
-An n8n workflow designed to automate AI-assisted ASMR video creation, from prompt generation to video processing and social media publishing.
+![Workflow overview](assets/workflow-overview.png)
 
-## 📸 Workflow Overview
+## What changed in v2.0
 
-![AI ASMR Video Generator Workflow](AI%20video%20generator.png)
-
-## 🎯 Project Objective
-
-Demonstrate how AI services and workflow automation can be integrated to reduce repetitive tasks involved in short-form video content production.
-
-The workflow connects AI prompt generation, video generation APIs, asynchronous job monitoring, validation, and publishing into a single automated process.
-
-## 🛠️ Technology Stack
-
-| Technology | Purpose |
+| Area | v2.0 capability |
 |---|---|
-| n8n | Workflow orchestration and scheduling |
-| Google Vertex AI | AI-assisted prompt generation |
-| Google Veo | AI video generation |
-| REST APIs | Communication with external services |
-| JWT / OAuth | API authentication |
-| JavaScript | Workflow logic and data preparation |
-| YouTube API | Video publishing |
-| Facebook Graph API | Video publishing |
+| Prompt generation | Google Vertex AI chat model and structured JSON output |
+| Duplicate prevention | Compares meaningful title keywords with titles in Google Sheets and rejected candidates |
+| Regeneration | Loops back to prompt generation when a duplicate is detected, with a configured retry limit |
+| Video generation | Google Veo 3.1 asynchronous generation and polling |
+| Publishing | Uploads the generated MP4 to YouTube and Facebook |
+| Tracking | Logs video title, execution ID, timestamp, and per-platform success/failure statuses in Google Sheets |
+| Resilience | Platform upload nodes retry on failure and route errors to status updates |
 
-## ⚙️ How It Works
+## Architecture
 
-1. **Scheduled Trigger:** Starts the automation on a configured schedule.
-2. **AI Prompt Generation:** Uses Google Vertex AI and structured output parsing to generate video prompts, titles, and descriptions.
-3. **Authentication:** Prepares service-account authentication and exchanges a signed JWT for an access token.
-4. **Video Generation:** Sends the generated prompt to the Google Veo API to request a vertical ASMR video.
-5. **Asynchronous Monitoring:** Waits and polls for completion of the video-generation operation.
-6. **Validation:** Checks generation status, compliance-related responses, and error conditions.
-7. **Video Processing:** Converts the returned video data into a file.
-8. **Publishing:** Routes the generated video to YouTube and Facebook publishing integrations.
+1. Schedule trigger reads previously logged titles from Google Sheets.
+2. Vertex AI generates a structured prompt, video title and description.
+3. JavaScript checks title keywords against existing and rejected titles.
+4. Duplicate candidates enter a bounded regeneration branch; accepted candidates proceed.
+5. Google Cloud authentication and Veo 3.1 generation run through HTTP/JWT nodes.
+6. Polling waits for the video operation to finish; downstream checks route errors and filtered results.
+7. The video is converted from base64 to an MP4 binary.
+8. YouTube and Facebook upload branches independently update their statuses in Google Sheets.
 
-## 💡 Technical Highlights
+## Workflow file
 
-- AI prompt engineering with structured JSON outputs
-- REST API integrations and JWT-based authentication
-- Asynchronous processing and polling logic
-- Conditional branching and response validation
-- Binary file conversion
-- Multi-platform publishing workflow design
+[`workflow/ASMR_Video_Generator_v2_PUBLIC_TEMPLATE.json`](workflow/ASMR_Video_Generator_v2_PUBLIC_TEMPLATE.json)
 
-## 📁 Project Files
+**Important:** This is a **sanitized reference template**, not a ready-to-run import. Credentials, service-account payload, project identifiers and spreadsheet identifiers have been removed or replaced with placeholders. Configure authentication securely inside n8n before running. The `Secret Payload` node deliberately throws an error until it is replaced with secure credential handling. Never paste service-account private keys into public workflow files.
 
-- [View Workflow JSON](ASMR_Video_Generator_GitHub_Safe.json)
-- [View Workflow Screenshot](AI%20video%20generator.png)
+### Setup requirements
 
-## 🔐 Security & Setup Notes
+- n8n instance with Google Vertex AI, Google Sheets, YouTube, Facebook Graph API, JWT and HTTP Request node support
+- Google Cloud project with access to the required Vertex AI and Veo model
+- Secure service-account/JWT authentication configured in n8n
+- Google Sheets log with columns `Video Title`, `Date & Time`, `ID`, `Facebook Status`, `YouTube Status`
+- Authorized YouTube and Facebook publishing credentials
+- Replace `YOUR_GOOGLE_CLOUD_PROJECT_ID`, `YOUR_SPREADSHEET_ID`, and `YOUR_SHEET_NAME` placeholders
+- Verify OAuth scopes, permissions, video API availability and platform publishing policies
 
-This repository contains a sanitized portfolio version of the workflow. Credentials and project-specific authentication details must be configured separately before execution.
+## Validation and limitations
 
-To explore the workflow:
+A recorded execution and screenshots show successful publication of a glass-grapefruit video to YouTube and Facebook, with corresponding Success statuses in Google Sheets. This is a project demonstration, not a claim of unattended production uptime or comprehensive load testing.
 
-1. Download the JSON file.
-2. Import it into a compatible n8n environment.
-3. Configure your own Google Cloud project, API permissions, and service credentials.
-4. Replace the placeholder authentication configuration.
-5. Connect authorized YouTube and Facebook accounts.
-6. Review API settings, model availability, and publishing permissions before testing.
+Duplicate checking uses overlapping non-stopword title keywords. This is a useful heuristic but not semantic similarity detection, and it can reject different titles sharing a fruit-related keyword. The exported workflow contains a configured retry limit; test exhaustion and loop state behavior in your own n8n environment before treating it as production-hardened.
 
-**Note:** The sanitized workflow is provided as a technical demonstration and is not ready to run without additional configuration.
+## Tools
 
-## 🌐 About the Developer
+n8n · Google Vertex AI · Google Veo 3.1 · JavaScript (n8n Code nodes) · Google Sheets · YouTube API · Facebook Graph API · JWT · HTTP requests
 
-**Alvin John Ramos** — AI Automation & Workflow Specialist
+## Portfolio note
 
-I build AI-powered workflows and integrations using n8n, Make, Zapier, JavaScript, and REST APIs.
-
-[🌐 View My Portfolio](https://work-wit-charm.lovable.app/)
-  
+Built as a hands-on AI automation project, iterating from an earlier video-generation workflow to add duplicate detection, bounded regeneration and independent publishing outcomes.
