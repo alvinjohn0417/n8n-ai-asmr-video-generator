@@ -1,4 +1,4 @@
-AI ASMR Video Generator v2.0
+# 🎬 AI ASMR Video Generator v2.0
 
 Live Workflow Demonstration
 
