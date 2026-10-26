@@ -1,4 +1,4 @@
-# AI ASMR Video Generator v2.0
+A# AI ASMR Video Generator v2.0
 
 Live Workflow Demonstration
 
@@ -12,7 +12,7 @@ Video Chapters
 - 01:21 — AI Prompt Generation and Video Styling
 - 03:07 — Live Workflow Demonstration and Results
 
-![Workflow Overview](assets/workflow-overview.png)
+![Workflow Overview](workflow-overview.png)
 
 ## What changed in v2.0
 
