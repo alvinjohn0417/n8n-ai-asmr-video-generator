@@ -1,7 +1,16 @@
-[README.md](https://github.com/user-attachments/files/33750046/README.md)
 # AI ASMR Video Generator v2.0
 
-An n8n automation project that creates short AI-generated ASMR fruit-slicing videos and publishes them to YouTube and Facebook, with duplicate-title checks and Google Sheets tracking.
+Live Workflow Demonstration
+
+Watch the Full Loom Walkthrough
+https://www.loom.com/share/6de02ed3311642c293b457ff2630cac5
+
+This approximately five-minute walkthrough demonstrates the 29-node n8n automation, including AI-generated structured prompts, duplicate-title detection, asynchronous Google Veo video generation, and automated publishing to YouTube and Facebook.
+
+Video Chapters
+- 00:00 — Introduction and Workflow Overview
+- 01:21 — AI Prompt Generation and Video Styling
+- 03:07 — Live Workflow Demonstration and Results
 
 ![Workflow overview](assets/workflow-overview.png)
 
